@@ -38,6 +38,7 @@ class BaseHandlerAdapter(webapp2.BaseHandlerAdapter):
       args = ()
 
     # Inject handler object to handler
+    # logging.info('---> run handler: args: %s, kwargs: %s', args, kwargs)
     return self.handler(
         BaseHandler(request, response,
                     name=self.handler.__name__,
@@ -101,12 +102,14 @@ class WSGIApplication(webapp2.WSGIApplication):
   def route(self, regex, methods=_METHODS, models=None):
     def wrapper(func):
       # logging.info('---> add (%s) route "%s" to %s', method, regex, func)
+      # logging.info('---> add %s.%s', func.__module__, func.__name__)
 
       url = ''.join([regex])
 
       if models:
         self.router.add_models(id(func), models)
 
+      # route_name = '%s.%s' % (func.__module__, func.__name__)
       self.router.add(webapp2.Route(url, handler=func, methods=methods))
       if len(url) > 1:
         extra_url = '%s/' % url if url[-1] != '/' else url[:-1]
