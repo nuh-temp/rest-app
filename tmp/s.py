@@ -20,7 +20,7 @@ logging.info('cls_m1: %s, %s', cls_m1, id(cls_m1))
 
 logging.info('########################')
 model2_cls = mod1.factory('2')
-obj2 = model1_cls('2')
+obj2 = model2_cls('2')
 cls_m2 = model2_cls.ClassEnv()
 logging.info('model2_cls: %s, %s, %s', model2_cls, id(model2_cls), id(model2_cls._factory_env))
 logging.info('(obj2) name: %s, env: %s, env.id: %s', obj2._name, obj2.env, id(obj2.env))
