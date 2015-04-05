@@ -6,12 +6,13 @@ Env = collections.namedtuple('Env', ['name'])
 
 class BaseModel(object):
   _factory_env = None
-  pass
+  _a = None
 
 
 class MyModel(BaseModel):
   # logging.info('--m1--> MyModel real class init: factory_env: %s, id: %s', f, id(f))
 
+  _a = []
   def __init__(self, name):
     logging.info('--m1--> !!!! run __init__: %s', name)
     self._type = 'model'
@@ -33,6 +34,7 @@ def factory(i):
 
   CopyOfModel = type('MyModel', MyModel.__bases__, dict(MyModel.__dict__))
   CopyOfModel._factory_env = Env(i)
+  CopyOfModel._a.append(i)
   return CopyOfModel
 
 # add shortcut for Factory.Env to GetEnv class variable

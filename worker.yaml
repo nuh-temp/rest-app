@@ -1,0 +1,18 @@
+application: nuh-temp
+module: worker
+api_version: 1
+version: 1
+runtime: python27
+instance_class: B1
+threadsafe: true
+
+manual_scaling:
+  instances: 1
+
+handlers:
+- url: /.*
+  script: threads.app
+
+libraries:
+- name: jinja2
+  version: latest
