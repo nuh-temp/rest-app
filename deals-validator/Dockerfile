@@ -6,7 +6,7 @@ FROM gcr.io/google_appengine/nodejs
 # version that satisfies it. \
 
 # Install updates and dependencies
-RUN apt-get update -y && apt-get install --no-install-recommends -y -q apt-utils libfontconfig1 && \
+RUN apt-get update -y && apt-get install --no-install-recommends -y -q libfontconfig1 && \
     apt-get clean && rm /var/lib/apt/lists/*_*
 
 RUN npm install         https://storage.googleapis.com/gae_node_packages/semver.tar.gz && \
