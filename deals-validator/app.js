@@ -11,11 +11,11 @@ var app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-function getCurrentPrice(url) {
-  var capabilities = webdriver.Capabilities.phantomjs();
-  capabilities.set('phantomjs.binary.path', phantomjs.path);
-  var driver = new webdriver.Builder().withCapabilities(capabilities).build();
+var capabilities = webdriver.Capabilities.phantomjs();
+capabilities.set('phantomjs.binary.path', phantomjs.path);
+var driver = new webdriver.Builder().withCapabilities(capabilities).build();
 
+function getCurrentPrice(url) {
   console.log('start checking: %s', url);
   driver.get(url);
   return driver.wait(function() {
