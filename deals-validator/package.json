@@ -1,29 +1,20 @@
 {
-  "name": "nodejs-getting-started",
+  "name": "deals-validator",
   "version": "1.0.0",
-  "description": "End to end sample for running Node.JS applications on Google Cloud Platform",
-  "repository": "https://github.com/GoogleCloudPlatform/nodejs-getting-started",
+  "description": "Validates deals",
   "private": true,
   "scripts": {
-    "start": "node --harmony app.js",
+    "start": "nodejs --harmony app.js",
     "monitor": "nodemon app.js",
     "deploy": "gcloud preview app deploy app.yaml",
     "lint": "jshint --exclude-path=.gitignore .",
     "test": "npm run lint"
   },
-  "author": "Google Inc.",
+  "author": "NuH",
   "contributors": [
     {
-      "name": "Jon Wayne Parrott",
-      "email": "jonwayne@google.com"
-    },
-    {
-      "name": "Jonathan Simon",
-      "email": "jbsimon@google.com"
-    },
-    {
-      "name": "Jason Dobry",
-      "email": "jdobry@google.com"
+      "name": "NuH",
+      "email": "nuh.temp@gmail.com"
     }
   ],
   "license": "Apache Version 2.0",
@@ -31,6 +22,7 @@
     "express": "^4.13.3",
     "selenium-webdriver": ">=2.2.0",
     "phantomjs": ">=1.9.19",
+    "node-phantom": ">=0.2.5",
     "body-parser": ">=1.14.2"
   },
   "devDependencies": {
@@ -40,3 +32,4 @@
     "node": ">=0.12.7"
   }
 }
+
