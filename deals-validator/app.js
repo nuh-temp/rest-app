@@ -2,12 +2,13 @@
 
 var express = require('express');
 var phantomjs = require('phantomjs');
-var nodePhantom = require('node-phantom');
 var webdriver = require('selenium-webdriver');
 var bodyParser = require('body-parser');
+var urlParse = require('url').parse;
 
 var app = express();
 
+app.use(express.static('st'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -15,38 +16,57 @@ var capabilities = webdriver.Capabilities.phantomjs();
 capabilities.set('phantomjs.binary.path', phantomjs.path);
 var driver = new webdriver.Builder().withCapabilities(capabilities).build();
 
-function getCurrentPrice(url) {
-  console.log('start checking: %s', url);
-  driver.get(url);
-  return driver.wait(function() {
-    var el1 = webdriver.By.id("priceblock_dealprice");
-    var el2 = webdriver.By.id("priceblock_ourprice");
+var HANDLERS = {
+  'www.amazon.com': getAmazonPrice,
+  'amzn.to': getAmazonPrice,
+  'www1.macys.com': getMacysPrice,
+};
 
-    return driver.isElementPresent(el1).then(function(presents) {
-      if (presents) {
-        return driver.findElement(el1).getText();
-      }
-      return driver.isElementPresent(el2).then(function(presents) {
-        if (presents) {
-          return driver.findElement(el2).getText();
-        }
-        return null;
-      });
+
+function getAmazonPrice(url) {
+  driver.get(url);
+  var el = webdriver.By.xpath("//span[@id='priceblock_ourprice' or @id='priceblock_dealprice']");
+  return driver.wait(function() {
+    return driver.isElementPresent(el).then(function(presents) {
+      return (presents) ? driver.findElement(el).getText() : null;
     });
   }, 1000, 'Failed to find price after 1 second').then(function(strPrice) {
-    console.log(' done checking: %s', url);
-    return (strPrice) ? parseFloat(strPrice.replace(/^\$/, '')) : null;
+    return (strPrice) ? parseFloat(strPrice.replace(/[^\d.,]+/i, '')) : null;
+  });
+}
+
+function getMacysPrice(url) {
+  driver.get(url);
+  var el = webdriver.By.xpath("//div[contains(@id, 'priceInfo')]/div[contains(@class, 'standardProdPricingGroup')]/span[contains(@class, 'priceSale')]");
+  return driver.wait(function() {
+    return driver.isElementPresent(el).then(function(presents) {
+      return (presents) ? driver.findElement(el).getText() : null;
+    });
+  }, 1000, 'Failed to find price after 1 second').then(function(strPrice) {
+    return (strPrice) ? parseFloat(strPrice.replace(/[^\d.,]+/i, '')) : null;
   });
 }
 
 app.route('/check')
   .get(function(req, res) {
-    res.sendFile(__dirname + "/" + "check.html" );
+    res.sendFile(__dirname + "/check.html" );
   })
   .post(function(req, res) {
     var url = req.body.url;
     var price = parseFloat(req.body.price);
-    getCurrentPrice(url).then(function(currentPrice) {
+    var urlObj = urlParse(url);
+
+    var handler = HANDLERS[urlObj.host];
+    if (!handler) {
+      return res.json({
+        status: 'err',
+        msg: 'Unknown store "' + urlObj.host + '".',
+      });
+    }
+
+    console.log('start checking: %s', url);
+    handler(url).then(function(currentPrice) {
+      console.log(' done checking: %s', url);
       res.json({
         url: url,
         price: price,
@@ -55,42 +75,6 @@ app.route('/check')
       });
     });
   });
-
-app.get('/phantomjs', function(req, res) {
-  nodePhantom.create(function(err, ph) {
-    return ph.createPage(function(err, page) {
-      return page.open("http://www.amazon.com", function(err, status) {
-        console.log("opened site? ", status);
-        req.json({status: status});
-      });
-    });
-  });
-});
-
-app.get('/webdriver', function(req, res) {
-  var capabilities = webdriver.Capabilities.phantomjs();
-  capabilities.set('phantomjs.binary.path', phantomjs.path);
-  var driver = new webdriver.Builder().withCapabilities(capabilities).build();
-
-  // driver.get('http://www.amazon.com/Nordic-Ware-Cast-Iron-Aluminum-Shortbread/dp/B000237FR6');
-  driver.get('http://www.amazon.com/Donner-Mountain-Mens-Iron-BLACK/dp/B012BQH0K8');
-  // http://www.amazon.com/Nordic-Ware-Cast-Iron-Aluminum-Shortbread/dp/B000237FR6 - 38.16
-  // http://www.amazon.com/Donner-Mountain-Mens-Iron-BLACK/dp/B012BQH0K8 - 39.90
-  driver.wait(function() {
-    return driver.findElement(webdriver.By.id("priceblock_dealprice")).getText().then(function(text) {
-      return res.status(200).send('Deal price: ' + text);
-    }, function(error) {
-      console.log('ELEMENT is not found:', error);
-      return driver.findElement(webdriver.By.id("priceblock_ourprice")).getText().then(function(text) {
-        return res.status(200).send('Our price: ' + text);
-      }, function(error) {
-        return res.status(404).send('Price is not found.');
-      });
-    });
-  }, 1000);
-
-  driver.quit();
-});
 
 app.get('/', function(req, res) {
   res.status(200).send('It works!');
