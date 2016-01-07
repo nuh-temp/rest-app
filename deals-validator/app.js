@@ -1,7 +1,8 @@
 'use strict';
 
 var express = require('express');
-var phantomjs = require('phantomjs')
+var phantomjs = require('phantomjs');
+var nodePhantom = require('node-phantom');
 var webdriver = require('selenium-webdriver');
 var bodyParser = require('body-parser');
 
@@ -15,6 +16,7 @@ function getCurrentPrice(url) {
   capabilities.set('phantomjs.binary.path', phantomjs.path);
   var driver = new webdriver.Builder().withCapabilities(capabilities).build();
 
+  console.log('start checking: %s', url);
   driver.get(url);
   return driver.wait(function() {
     var el1 = webdriver.By.id("priceblock_dealprice");
@@ -28,10 +30,12 @@ function getCurrentPrice(url) {
         if (presents) {
           return driver.findElement(el2).getText();
         }
+        return null;
       });
     });
   }, 1000, 'Failed to find price after 1 second').then(function(strPrice) {
-    return parseFloat(strPrice.replace(/^\$/, ''));
+    console.log(' done checking: %s', url);
+    return (strPrice) ? parseFloat(strPrice.replace(/^\$/, '')) : null;
   });
 }
 
@@ -53,6 +57,17 @@ app.route('/check')
   });
 
 app.get('/phantomjs', function(req, res) {
+  nodePhantom.create(function(err, ph) {
+    return ph.createPage(function(err, page) {
+      return page.open("http://www.amazon.com", function(err, status) {
+        console.log("opened site? ", status);
+        req.json({status: status});
+      });
+    });
+  });
+});
+
+app.get('/webdriver', function(req, res) {
   var capabilities = webdriver.Capabilities.phantomjs();
   capabilities.set('phantomjs.binary.path', phantomjs.path);
   var driver = new webdriver.Builder().withCapabilities(capabilities).build();
